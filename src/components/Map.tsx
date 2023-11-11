@@ -108,7 +108,7 @@ export const Map = (props: Props) => {
         cell.setColony(colony);
     }
 
-    const detectColonies = (cells) => {
+    const detectColonies = (cells: Cell[][]) => {
         return iterateCells(cells, (cell) => {
             detectColony(cell)
             return cell
@@ -162,7 +162,7 @@ export const Map = (props: Props) => {
         tick()
     }
 
-    const resetColony = (cells) => {
+    const resetColony = (cells: Cell[][]) => {
         return iterateCells(cells, (cell: Cell) => {
             let neighbors = countAliveNeighbors(cell);
             cell.setGhost(cell.calculateStatus(neighbors));
@@ -171,7 +171,7 @@ export const Map = (props: Props) => {
         })
     }
 
-    const moveColony = (cells) => {
+    const moveColony = (cells: Cell[][]) => {
         return iterateCells(cells, (cell: Cell) => {
             cell.move();
             return cell
