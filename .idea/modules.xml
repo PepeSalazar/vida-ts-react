@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../vida-ts-react.iml" filepath="$PROJECT_DIR$/../vida-ts-react.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/vida-ts-react.iml" filepath="$PROJECT_DIR$/.idea/vida-ts-react.iml" />
     </modules>
   </component>
 </project>
