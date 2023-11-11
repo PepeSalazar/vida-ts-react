@@ -1,100 +1,100 @@
-import {Coordenada} from "./Coordenada";
-import {ESTADO_CELULA} from "../enums/EstadoCelula";
+import {Coordinate} from "./Coordinate";
+import {CELL_STATUS} from "@/enums/CellStatus";
 import Utils from "@/utils/utils";
 
 export class Cell {
-    private fantasma: ESTADO_CELULA = ESTADO_CELULA.MUERTA;
+    private ghost: CELL_STATUS = CELL_STATUS.DEAD;
 
     constructor(private id: number = -1,
-                private coordenada: Coordenada = new Coordenada(),
-                private estado: ESTADO_CELULA = ESTADO_CELULA.MUERTA,
-                private colonia: number = -1,
-                private tamanoCelula: number = 4,
-                private espacioCelular: number = 0) {
+                private coordinate: Coordinate = new Coordinate(),
+                private cellStatus: CELL_STATUS = CELL_STATUS.DEAD,
+                private colony: number = -1,
+                private cellSize: number = 4,
+                private intracellularSpace: number = 0) {
         this.id = id;
-        this.coordenada = coordenada;
-        this.estado = estado;
-        this.colonia = colonia;
-        this.tamanoCelula = tamanoCelula;
-        this.espacioCelular = espacioCelular;
+        this.coordinate = coordinate;
+        this.cellStatus = cellStatus;
+        this.colony = colony;
+        this.cellSize = cellSize;
+        this.intracellularSpace = intracellularSpace;
     }
 
-    public setEstado(estado: ESTADO_CELULA): void {
-        this.estado = estado;
+    public setEstado(estado: CELL_STATUS): void {
+        this.cellStatus = estado;
     }
 
-    public getEstado(): ESTADO_CELULA {
-        return this.estado;
+    public getEstado(): CELL_STATUS {
+        return this.cellStatus;
     }
 
-    public setColonia(idColonia: number): void {
-        this.colonia = idColonia;
+    public setColony(colonyId: number): void {
+        this.colony = colonyId;
     }
 
-    public getColonia(): number {
-        return this.colonia;
+    public getColony(): number {
+        return this.colony;
     }
 
     public getId(): number {
         return this.id;
     }
 
-    public getCoordenada(): Coordenada {
-        return this.coordenada;
+    public getCoordinates(): Coordinate {
+        return this.coordinate;
     }
 
-    public setCoordenada(value: Coordenada) {
-        this.coordenada = value;
+    public setCoordinate(value: Coordinate) {
+        this.coordinate = value;
     }
 
-    public esIgual(otra: Cell): boolean {
-        if (!otra) {
+    public isEqual(other: Cell): boolean {
+        if (!other) {
             return false;
         }
-        return otra.getCoordenada().esIgual(this.getCoordenada());
+        return other.getCoordinates().isEqual(this.getCoordinates());
     }
 
-    public setFantasma(fantasma: ESTADO_CELULA) {
-        this.fantasma = fantasma;
+    public setGhost(ghost: CELL_STATUS) {
+        this.ghost = ghost;
     }
 
-    public desfasar(): void {
-        this.estado = this.fantasma;
+    public move(): void {
+        this.cellStatus = this.ghost;
     }
 
-    public calcularEstado(vecinosVivos: number): ESTADO_CELULA {
-        let nuevoEstado = ESTADO_CELULA.MUERTA;
+    public calculateStatus(aliveNeighbors: number): CELL_STATUS {
+        let newStatus = CELL_STATUS.DEAD;
         let b = 3;//3
         let s = [2, 3];//2,3
 
-        if (vecinosVivos < s[0] && this.estado === ESTADO_CELULA.VIVA) {
-            nuevoEstado = ESTADO_CELULA.MUERTA; // Muere de soledad
+        if (aliveNeighbors < s[0] && this.cellStatus === CELL_STATUS.ALIVE) {
+            newStatus = CELL_STATUS.DEAD; // Muere de soledad
         }
-        if ((vecinosVivos === s[0] || vecinosVivos === s[1]) && this.estado === ESTADO_CELULA.VIVA) {
-            nuevoEstado = ESTADO_CELULA.VIVA; // Se queda viva
+        if ((aliveNeighbors === s[0] || aliveNeighbors === s[1]) && this.cellStatus === CELL_STATUS.ALIVE) {
+            newStatus = CELL_STATUS.ALIVE; // Se queda viva
         }
-        if (vecinosVivos > s[1] && this.estado === ESTADO_CELULA.VIVA) {
-            nuevoEstado = ESTADO_CELULA.MUERTA; // Se muere por sobrepoblación
+        if (aliveNeighbors > s[1] && this.cellStatus === CELL_STATUS.ALIVE) {
+            newStatus = CELL_STATUS.DEAD; // Se muere por sobrepoblación
         }
-        if (vecinosVivos === b && this.estado === ESTADO_CELULA.MUERTA) {
-            nuevoEstado = ESTADO_CELULA.VIVA; //Revive por reproducción
+        if (aliveNeighbors === b && this.cellStatus === CELL_STATUS.DEAD) {
+            newStatus = CELL_STATUS.ALIVE; //Revive por reproducción
         }
 
-        return nuevoEstado;
+        return newStatus;
     }
 
-    public pintar(contexto: any): void {
-        let x: number = this.getCoordenada().x * this.tamanoCelula;//Calcula la posición de la célula en el canvas.
-        let y: number = this.getCoordenada().y * this.tamanoCelula;
-        let celulaWidth: number = this.tamanoCelula - this.espacioCelular;
-        let celulaHeight: number = this.tamanoCelula - this.espacioCelular;
+    public render(context: any): void {
+        let x: number = this.getCoordinates().x * this.cellSize;//Calcula la posición de la célula en el canvas.
+        let y: number = this.getCoordinates().y * this.cellSize;
+        let cellWidth: number = this.cellSize - this.intracellularSpace;
+        let cellHeight: number = this.cellSize - this.intracellularSpace;
 
-        contexto.fillStyle = Utils.seleccionarColor(this);
-        contexto.fillRect(x, y, celulaWidth, celulaHeight);
+        context.fillStyle = Utils.selectColor(this);
+        context.fillRect(x, y, cellWidth, cellHeight);
 
-        // contexto.fillStyle = "#000";
-        // contexto.font      = "10px Arial";
-        // contexto.fillText(this.getId().toString(), (x + this.tamanoCelula / 2), (y + this.tamanoCelula / 2));
+        // context.fillStyle = "#000";
+        // context.font      = "10px Arial";
+        // context.fillText(this.getId().toString(), (x + this.cellSize / 2), (y + this.cellSize / 2));
     }
 
 }

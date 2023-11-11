@@ -1,9 +1,9 @@
 export type CellConfig = {
-    cantidadColonias: number;
-    generaciones: number;
-    tamanoCelula: number;
-    espacioCelular: number;
-    porcentajeVida: number;
+    amountOfColonies: number;
+    generations: number;
+    cellSize: number;
+    intracellularSpace: number;
+    lifePercentage: number;
 }
 
 export type MapConfig = {
@@ -22,11 +22,11 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
 }
 
 export const DEFAULT_CELL_CONFIG: CellConfig = {
-    cantidadColonias: 0,
-    generaciones: 0,
-    tamanoCelula: 4,
-    espacioCelular: 0,
-    porcentajeVida: 0.4,
+    amountOfColonies: 0,
+    generations: 0,
+    cellSize: 4,
+    intracellularSpace: 0,
+    lifePercentage: 0.4,
 }
 
 export const DEFAULT_UNIVERSE_CONFIG: UniverseConfig = {

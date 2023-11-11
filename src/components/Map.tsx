@@ -1,8 +1,8 @@
 import * as React from 'react';
 import {useEffect, useState} from "react";
 import {Cell} from "@/models/Cell";
-import {Coordenada} from "@/models/Coordenada";
-import {ESTADO_CELULA} from "@/enums/EstadoCelula";
+import {Coordinate} from "@/models/Coordinate";
+import {CELL_STATUS} from "@/enums/CellStatus";
 import {Canvas} from "@/components/Canvas";
 import {CellConfig, MapConfig} from "@/types/MapConfig";
 import Utils from "@/utils/utils";
@@ -31,7 +31,7 @@ export const Map = (props: Props) => {
     }, [cells]);
 
     const initializeCells = (): Cell[][] => {
-        const {tamanoCelula, espacioCelular} = cellConfig
+        const {cellSize, intracellularSpace} = cellConfig
 
         let cells = new Array(rows);
 
@@ -40,144 +40,147 @@ export const Map = (props: Props) => {
 
             for (let y: number = 0; y < columns; y++) {
                 let id = ((x * columns) + y);
-                cells[x][y] = new Cell(id, new Coordenada(x, y), ESTADO_CELULA.MUERTA, -1, tamanoCelula, espacioCelular);
+                cells[x][y] = new Cell(id, new Coordinate(x, y), CELL_STATUS.DEAD, -1, cellSize, intracellularSpace);
             }
         }
 
         return cells
     }
 
-    const enElMapa = (x: number, y: number): boolean => {
-        return !!(x >= 0 && y >= 0 && x < rows && y < columns);
+    const isInTheMap = (x: number, y: number): boolean => {
+        return (x >= 0 && y >= 0 && x < rows && y < columns);
     }
 
-    const getCelula = (x: number, y: number): Cell => {
-        let celula: Cell;
-        let existe = enElMapa(x, y);
-        if (existe) {
-            celula = cells[x][y];
+    const getCell = (x: number, y: number): Cell => {
+        let cell: Cell;
+        let exists = isInTheMap(x, y);
+        if (exists) {
+            cell = cells[x][y];
         } else {
-            celula = new Cell();
+            cell = new Cell();
         }
-        return celula;
+        return cell;
     }
 
-    const recorrer = (cells: Cell[][], funcion: (cell: Cell) => Cell) => {
+    const iterateCells = (cells: Cell[][], func: (cell: Cell) => Cell) => {
         return cells.map((row) => {
-            return row.map(funcion)
+            return row.map(func)
         })
     }
 
     //Si es célula vecina válida y viva, y no su padre.
-    const esCelulaVecinaValida = (celula: Cell, padre?: Cell) => {
-        if (!padre) return true
-        return (celula.getId() !== -1 && celula.getEstado() === ESTADO_CELULA.VIVA && !celula.esIgual(padre));
+    const isValidNeighborCell = (cell: Cell, parent?: Cell) => {
+        if (!parent) return true
+        return (cell.getId() !== -1 && cell.getEstado() === CELL_STATUS.ALIVE && !cell.isEqual(parent));
     }
 
-    const obtenerCelulasVecinas = (celula: Cell) => {
-        let vecinos: Cell [] = [];
-        let coordenada: Coordenada = celula.getCoordenada();
-        vecinos.push(getCelula(coordenada.x - 1, coordenada.y - 1));
-        vecinos.push(getCelula(coordenada.x - 1, coordenada.y));
-        vecinos.push(getCelula(coordenada.x - 1, coordenada.y + 1));
-        vecinos.push(getCelula(coordenada.x, coordenada.y - 1));
-        vecinos.push(getCelula(coordenada.x, coordenada.y + 1));
-        vecinos.push(getCelula(coordenada.x + 1, coordenada.y - 1));
-        vecinos.push(getCelula(coordenada.x + 1, coordenada.y));
-        vecinos.push(getCelula(coordenada.x + 1, coordenada.y + 1));
-        return vecinos;
+    const getNeighborCells = (cell: Cell) => {
+        let neighbors: Cell [] = [];
+        let coordinate: Coordinate = cell.getCoordinates();
+        neighbors.push(getCell(coordinate.x - 1, coordinate.y - 1));
+        neighbors.push(getCell(coordinate.x - 1, coordinate.y));
+        neighbors.push(getCell(coordinate.x - 1, coordinate.y + 1));
+        neighbors.push(getCell(coordinate.x, coordinate.y - 1));
+        neighbors.push(getCell(coordinate.x, coordinate.y + 1));
+        neighbors.push(getCell(coordinate.x + 1, coordinate.y - 1));
+        neighbors.push(getCell(coordinate.x + 1, coordinate.y));
+        neighbors.push(getCell(coordinate.x + 1, coordinate.y + 1));
+        return neighbors;
     }
 
-    const ContarVecinosVivos = (celula: Cell): number => {
-        let contadorVecinos: number = 0;
-        let vecinos: Cell[] = obtenerCelulasVecinas(celula);
-        vecinos.forEach((vecino) => {
-            if (vecino.getId() !== -1 && vecino.getEstado() === ESTADO_CELULA.VIVA) {
-                contadorVecinos++;
+    const countAliveNeighbors = (cell: Cell): number => {
+        let neighborCounter: number = 0;
+        let neighbors: Cell[] = getNeighborCells(cell);
+        neighbors.forEach((neighbor) => {
+            if (neighbor.getId() !== -1 && neighbor.getEstado() === CELL_STATUS.ALIVE) {
+                neighborCounter++;
             }
         });
-        return contadorVecinos;
+        return neighborCounter;
     }
 
-    const asignarColonia = (celula: Cell, padre?: Cell): void => {
-        if (padre) {
-            celula.setColonia(padre.getColonia());
+    const assignColony = (cell: Cell, parent?: Cell): void => {
+        if (parent) {
+            cell.setColony(parent.getColony());
             return;
         }
-        let colonia = Math.floor(Math.random() * (255));
-        celula.setColonia(colonia);
+        let colony = Math.floor(Math.random() * (255));
+        cell.setColony(colony);
     }
 
-    const detectarColonias = (cells) => {
-        return recorrer(cells, (cell) => {
-            detectarColonia(cell)
+    const detectColonies = (cells) => {
+        return iterateCells(cells, (cell) => {
+            detectColony(cell)
             return cell
         })
     }
 
-    const detectarColonia = (celula: Cell, padre?: Cell): void => {
-        let vecinas: Cell[];
-        if (celula.getColonia() !== -1) {
+    const detectColony = (cell: Cell, parent?: Cell): void => {
+        let neighbors: Cell[];
+        if (cell.getColony() !== -1) {
             return;
         }
-        if (celula.getEstado() === ESTADO_CELULA.MUERTA) {
+        if (cell.getEstado() === CELL_STATUS.DEAD) {
             return;
         }
 
-        const isCell = padre instanceof Cell
-        const newParent = isCell ? padre : undefined
-        asignarColonia(celula, newParent);
-        vecinas = obtenerCelulasVecinas(celula);
-        vecinas.forEach(function (vecina) {
-            let esValida = esCelulaVecinaValida(vecina, newParent);
-            if (esValida) {
-                detectarColonia(vecina, celula);
+        const isCell = parent instanceof Cell
+        const newParent = isCell ? parent : undefined
+        assignColony(cell, newParent);
+        neighbors = getNeighborCells(cell);
+
+        neighbors.forEach(function (vecina) {
+            let isValid = isValidNeighborCell(vecina, newParent);
+
+            if (isValid) {
+                detectColony(vecina, cell);
             }
         });
     }
 
-    const exterminarVida = (): void => {
-        const newCells = recorrer(cells, (celula: Cell) => {
-            celula.setEstado(ESTADO_CELULA.MUERTA);
-            return celula
+    const exterminateLife = (): void => {
+        const newCells = iterateCells(cells, (cell: Cell) => {
+            cell.setEstado(CELL_STATUS.DEAD);
+            return cell
         });
 
         setCells(newCells)
         setGenerations(0)
     }
 
-    const generarVida = (): void => {
-        recorrer(cells, (cell) => {
-            let estado = ESTADO_CELULA.VIVA;
-            if (Utils.generarNumeroRandom(0, 1) === 0) {
-                estado = ESTADO_CELULA.MUERTA;
+    const generateLife = (): void => {
+        iterateCells(cells, (cell) => {
+            let status = CELL_STATUS.ALIVE;
+            if (Utils.generateRandomNumber(0, 1) === 0) {
+                status = CELL_STATUS.DEAD;
             }
-            cell.setEstado(estado);
+            cell.setEstado(status);
 
             return cell
         })
+
         tick()
     }
 
-    const reiniciarColonia = (cells) => {
-        return recorrer(cells, (celula: Cell) => {
-            let vecinos = ContarVecinosVivos(celula);
-            celula.setFantasma(celula.calcularEstado(vecinos));
-            celula.setColonia(-1); // Reinica la colonia
-            return celula
+    const resetColony = (cells) => {
+        return iterateCells(cells, (cell: Cell) => {
+            let neighbors = countAliveNeighbors(cell);
+            cell.setGhost(cell.calculateStatus(neighbors));
+            cell.setColony(-1); // Resets the colony
+            return cell
         })
     }
 
-    const desfasarColonia = (cells) => {
-        return recorrer(cells, (celula: Cell) => {
-            celula.desfasar();
-            return celula
+    const moveColony = (cells) => {
+        return iterateCells(cells, (cell: Cell) => {
+            cell.move();
+            return cell
         })
     }
     const tick = (): void => {
-        let newCells = reiniciarColonia(cells);
-        newCells = desfasarColonia(newCells);
-        newCells = detectarColonias(newCells);
+        let newCells = resetColony(cells);
+        newCells = moveColony(newCells);
+        newCells = detectColonies(newCells);
 
         setGenerations((generation) => {
             return generation + 1
@@ -199,7 +202,7 @@ export const Map = (props: Props) => {
     return (
         <div>
             <div>
-                <button onClick={generarVida}>Generate life</button>
+                <button onClick={generateLife}>Generate life</button>
             </div>
 
             <div>
@@ -207,7 +210,7 @@ export const Map = (props: Props) => {
             </div>
 
             <div>
-                <button onClick={exterminarVida}>Exterminate</button>
+                <button onClick={exterminateLife}>Exterminate</button>
             </div>
 
             <div>

@@ -23,7 +23,7 @@ export const Canvas = (props: CanvasProps) => {
 
         cells.forEach((row) => {
             row.forEach((cell) => {
-                cell.pintar(ctx)
+                cell.render(ctx)
             })
         })
     }

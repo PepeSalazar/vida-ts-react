@@ -2,9 +2,6 @@ import * as React from 'react';
 import {DEFAULT_UNIVERSE_CONFIG} from "@/types/MapConfig";
 import {Map} from "@/components/Map";
 
-type Props = {};
-type State = {};
-
 const Universe = () => {
     const {mapConfig, cellConfig} = DEFAULT_UNIVERSE_CONFIG
 

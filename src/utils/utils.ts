@@ -1,5 +1,5 @@
 import {Cell} from "@/models/Cell";
-import {ESTADO_CELULA} from "@/enums/EstadoCelula";
+import {CELL_STATUS} from "@/enums/CellStatus";
 export default class Utils {
 
   constructor(){
@@ -11,41 +11,41 @@ export default class Utils {
    * @param max
    * @return {number}
    */
-  static generarNumeroRandom(min : number, max : number) : number{
+  static generateRandomNumber(min : number, max : number) : number{
     return Math.floor(Math.random() * (max - min + 1) + min);
   }
 
   /**
    * Selecciona el color de las celulas para mostrar.
-   * @param celula
+   * @param cell
    * @return {string}
    */
-  static seleccionarColor(celula : Cell) : string{
-    let estado = celula.getEstado();
+  static selectColor(cell : Cell) : string{
+    let status = cell.getEstado();
 
-    if(estado === ESTADO_CELULA.MUERTA){ return "#09C"; }
-    if(estado === ESTADO_CELULA.SELECCIONADA){ return "#FF0"; }
+    if(status === CELL_STATUS.DEAD){ return "#09C"; }
+    if(status === CELL_STATUS.SELECTED){ return "#FF0"; }
 
-    let cadena : string = Math.floor(celula.getColonia()).toString(16);
-    cadena              = Utils.formatearCadena(cadena);
-    if(cadena !== "00"){
-      cadena = "#00CC" + cadena;
+    let hexString : string = Math.floor(cell.getColony()).toString(16);
+    hexString              = Utils.formatString(hexString);
+    if(hexString !== "00"){
+      hexString = "#00CC" + hexString;
     } else {
-      cadena = "#00CCFF";
+      hexString = "#00CCFF";
     }
-    return cadena;
+    return hexString;
   }
 
   /**
    * Verifica que la cadena tenga al menos dos caracteres.
-   * @param cadena
+   * @param hexString
    * @returns {string}
    */
-  static formatearCadena(cadena : string) : string{
-    let cadenaFormateada = cadena;
-    if(cadena.length < 2){
-      cadenaFormateada = "0" + cadena;
+  static formatString(hexString : string) : string{
+    let formattedString = hexString;
+    if(hexString.length < 2){
+      formattedString = "0" + hexString;
     }
-    return cadenaFormateada;
+    return formattedString;
   }
 }
