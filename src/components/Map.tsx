@@ -17,16 +17,18 @@ export const Map = (props: Props) => {
     const {rows, columns} = mapConfig
     const [generations, setGenerations] = useState(0)
     const [cells, setCells] = useState<Cell[][]>([])
-    const [interval, setInterval] = useState(0)
+    const [autoplay, setAutoplay] = useState(false)
 
     useEffect(() => {
         const cells = initializeCells()
         setCells(cells)
-
-        return () => {
-            window.clearInterval(interval)
-        }
     }, [])
+
+    useEffect(() => {
+        if (!autoplay) return
+
+        tick()
+    }, [cells]);
 
     const initializeCells = (): Cell[][] => {
         const {tamanoCelula, espacioCelular} = cellConfig
@@ -106,8 +108,8 @@ export const Map = (props: Props) => {
         celula.setColonia(colonia);
     }
 
-    const detectarColonias = () => {
-        recorrer(cells, (cell) => {
+    const detectarColonias = (cells) => {
+        return recorrer(cells, (cell) => {
             detectarColonia(cell)
             return cell
         })
@@ -145,7 +147,7 @@ export const Map = (props: Props) => {
     }
 
     const generarVida = (): void => {
-        const newCells = recorrer(cells, (cell) => {
+        recorrer(cells, (cell) => {
             let estado = ESTADO_CELULA.VIVA;
             if (Utils.generarNumeroRandom(0, 1) === 0) {
                 estado = ESTADO_CELULA.MUERTA;
@@ -155,49 +157,42 @@ export const Map = (props: Props) => {
             return cell
         })
         tick()
-
-        setCells(newCells)
     }
 
-    const reiniciarColonia = () => {
-        const newCells = recorrer(cells, (celula: Cell) => {
+    const reiniciarColonia = (cells) => {
+        return recorrer(cells, (celula: Cell) => {
             let vecinos = ContarVecinosVivos(celula);
             celula.setFantasma(celula.calcularEstado(vecinos));
             celula.setColonia(-1); // Reinica la colonia
             return celula
         })
-
-        setCells(newCells)
     }
 
-    const desfasarColonia = () => {
-        const newCells = recorrer(cells, (celula: Cell) => {
+    const desfasarColonia = (cells) => {
+        return recorrer(cells, (celula: Cell) => {
             celula.desfasar();
             return celula
         })
-        setCells(newCells)
     }
     const tick = (): void => {
-        // this.cantidadColonias = 0;
-        reiniciarColonia();
-        desfasarColonia();
-        // this.mapa.recorrer(this.mapa.detectarColonia.bind(this.mapa));
-        detectarColonias();
+        let newCells = reiniciarColonia(cells);
+        newCells = desfasarColonia(newCells);
+        newCells = detectarColonias(newCells);
+
         setGenerations((generation) => {
             return generation + 1
         });
+
+        setCells(newCells)
     }
 
     const play = () => {
-        const interval = window.setInterval(() => {
-            tick()
-        })
-
-        setInterval(interval)
+        setAutoplay(true)
+        tick()
     }
 
     const stop = () => {
-        window.clearInterval(interval)
+        setAutoplay(false)
     }
 
 
